@@ -261,4 +261,32 @@ mod tests {
             }
         );
     }
+
+    #[test]
+    fn test_render() {
+        {
+            let mut pixels = vec![0; 0];
+
+            render(
+                &mut pixels,
+                (0, 0),
+                Complex::new(-1.0, 1.0),
+                Complex::new(1.0, -1.0),
+            );
+
+            assert_eq!(pixels, vec![0; 0]);
+        }
+        {
+            let mut pixels = vec![0; 9];
+
+            render(
+                &mut pixels,
+                (3, 3),
+                Complex::new(-1.0, 1.0),
+                Complex::new(1.0, -1.0),
+            );
+
+            assert_eq!(pixels, vec![252, 250, 252, 244, 0, 0, 244, 0, 0]);
+        }
+    }
 }
