@@ -1,9 +1,31 @@
+use image::codecs::png::{self, PngEncoder};
+use image::{ColorType, GrayImage, ImageEncoder};
 use num::Complex;
 use std::f64::INFINITY;
+use std::fs::File;
 use std::str::FromStr;
 
 fn main() {
     println!("Hello, world!");
+}
+
+fn write_image(
+    filename: &str,
+    pixels: &[u8],
+    bounds: (usize, usize),
+) -> Result<(), std::io::Error> {
+    // let output = File::create(filename)?;
+    let output = match File::create(filename) {
+        Ok(f) => f,
+        Err(e) => {
+            return Err(e);
+        }
+    };
+
+    let encoder = PngEncoder::new(output);
+    encoder.write_image(pixels, bounds.0 as u32, bounds.1 as u32, ColorType::L8);
+
+    Ok(())
 }
 
 /// Render a rectangle of the Mandelbrot set into a buffer of pixels.
