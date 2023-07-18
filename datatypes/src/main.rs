@@ -199,4 +199,58 @@ mod tests {
         // A shift of 17 bits is too large for `u16`, and 17 modulo 16 is 1.
         assert_eq!(5_u16.overflowing_shl(17), (10, true));
     }
+
+    #[test]
+    fn test_floating_points() {
+        assert!((-1. / f32::INFINITY).is_sign_negative());
+        assert_eq!(-f32::MIN, f32::MAX);
+
+        assert_eq!((-1. / f32::INFINITY), -0.);
+        assert_eq!(-f32::MIN, 3.4028235e38);
+        assert_eq!(-f32::MAX, -3.4028235e38);
+
+        assert_eq!(5f32.sqrt() * 5f32.sqrt(), 5.); // exactly 5.0, per IEEE
+        assert_eq!((-1.01f64).floor(), -2.0);
+        assert_eq!(5f32.sqrt(), 2.236068);
+
+        assert_eq!((2.0_f64).sqrt(), 1.4142135623730951);
+        assert_eq!(f64::sqrt(2.0), 1.4142135623730951);
+    }
+
+    #[test]
+    fn test_bool() {
+        assert_eq!(false as i32, 0);
+        assert_eq!(true as i32, 1);
+    }
+
+    #[test]
+    fn test_character() {
+        assert_eq!('\x2A', '*');
+        assert_eq!('\u{2A}', '*');
+
+        assert_eq!('*' as i32, 42);
+        assert_eq!('\u{CA0}' as u16, 0xca0);
+        assert_eq!('\u{CA0}' as i8, -0x60); // U+0CAO truncated to eight bits, signed
+    }
+
+    #[test]
+    fn test_tuple() {
+        // fn slit_at(&self, mid: usize) -> (&str, &str);
+        // pub const fn split_at(&self, mid: usize) -> (&[T], &[T]);
+        let v = [1, 2, 3, 4, 5, 6];
+        let (left, right) = v.split_at(3);
+        assert_eq!(left, [1, 2, 3]);
+        assert_eq!(right, [4, 5, 6]);
+
+        let text = "I see the eigenvalue in thine eye";
+        let (head, tail) = text.split_at(21);
+        assert_eq!(head, "I see the eigenvalue ");
+        assert_eq!(tail, "in thine eye");
+
+        let tmp = text.split_at(21);
+        assert_eq!(tmp.0, "I see the eigenvalue ");
+        assert_eq!(tmp.1, "in thine eye");
+
+        // fn swap<T>(x: &mut T, y: &mut T) -> () {}
+    }
 }
