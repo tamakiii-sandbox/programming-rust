@@ -30,4 +30,28 @@ mod tests {
         assert_eq!((-4_i32).abs(), 4); // absolute value
         assert_eq!(0b101101_u8.count_ones(), 4); // population count (bit count)
     }
+
+    #[test]
+    fn test_err() {
+        // println!("{}", (-4).abs());
+        // error[E0689]: can't call method `abs` on ambiguous numeric type `{integer}`
+        //   --> src/main.rs:36:29
+        //    |
+        // 36 |         println!("{}", (-4).abs());
+        //    |                             ^^^
+
+        // For more information about this error, try `rustc --explain E0689`.
+        // error: could not compile `datatypes` due to previous error
+
+        assert_eq!((-4_i32).abs(), 4);
+        assert_eq!(i32::abs(-4), 4);
+
+        // It should be noted here that method calls have a higher precedence than
+        // unary preposition operators. For this reason, special care should be taken
+        // when making method calls on negative values. In the second assertion above,
+        // `-4_i32` is enclosed in parentheses, but if we omit the parentheses and
+        // use `-4_i32.abs()`, we would call the `abs` method on the positive value `4`
+        // and apply the sign inversion operator to it, resulting in `-4`.
+        assert_eq!(-4_i32.abs(), -4);
+    }
 }
