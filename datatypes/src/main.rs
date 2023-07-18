@@ -1,5 +1,93 @@
+use std::env;
+
 fn main() {
-    println!("Hello, world!");
+    let args = parse_args();
+
+    match &*args.function {
+        "a" => a(),
+        "b" => b(),
+        s => eprintln!("Unknown function: {}", s),
+    }
+}
+
+struct Arguments {
+    function: String,
+}
+
+fn parse_args() -> Arguments {
+    let args: Vec<String> = env::args().skip(1).collect();
+
+    if args.len() != 1 {
+        eprintln!(
+            "Error wrong number of arguments: expected {}, got {}.",
+            1,
+            args.len()
+        );
+
+        std::process::exit(1);
+    }
+
+    Arguments {
+        function: args[0].clone(),
+    }
+}
+
+fn a() {
+    let mut i = 1;
+    loop {
+        i *= 10; // panic: attempt to multiplywith overflow
+                 // (but only in debug builds!)
+        println!("{}", i);
+    }
+
+    // $ cargo run
+    // 10
+    // 100
+    // 1000
+    // 10000
+    // 100000
+    // 1000000
+    // 10000000
+    // 100000000
+    // 1000000000
+    // thread 'main' panicked at 'attempt to multiply with overflow', src/main.rs:4:9
+    // note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+    // $ cargo run --release | head -n 20
+    // 10
+    // 100
+    // 1000
+    // 10000
+    // 100000
+    // 1000000
+    // 10000000
+    // 100000000
+    // 1000000000
+    // 1410065408
+    // 1215752192
+    // -727379968
+    // 1316134912
+    // 276447232
+    // -1530494976
+    // 1874919424
+    // 1569325056
+    // -1486618624
+    // -1981284352
+    // 1661992960
+    // thread 'main' panicked at 'failed printing to stdout: Broken pipe (os error 32)', library/std/src/io/stdio.rs:1008:9
+    // note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+}
+
+fn b() {
+    let mut i: i32 = 1;
+    loop {
+        // panic: multiplication overflow (in any build)
+        i = i.checked_mul(10).expect("multiplication overflowed");
+    }
+
+    // $ target/release/datatypes b
+    // thread 'main' panicked at 'multiplication overflowed', src/main.rs:56:31
+    // note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 }
 
 #[cfg(test)]
