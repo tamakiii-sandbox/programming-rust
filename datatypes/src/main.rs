@@ -417,4 +417,60 @@ mod tests {
         assert_eq!(v.pop(), None);
         assert_eq!(v.len(), 0);
     }
+
+    #[test]
+    fn test_slice() {
+        let v: Vec<f64> = vec![0.0, 0.707, 1.0, 0.707];
+        let a: [f64; 4] = [0.0, -0.707, 1.0, -0.707];
+
+        let sv: &[f64] = &v;
+        let sa: &[f64] = &a;
+
+        // Stack frame
+        // * v
+        //   * 所有権のあるポインタ[1]
+        //   * 容量:4
+        //   * 長さ:4
+        // * a
+        //   * 0.0 [2]
+        //   * -0.700
+        //   * -1.0
+        //   * 0.707
+        // * sa
+        //   * 所有権のあるポインタ [2]
+        //   * 4
+        // * sv
+        //   * 所有権のあるポインタ [1]
+        //   * 4
+        // Heap
+        // * 0.0 [1]
+        // * 0.707
+        // * 1.0
+        // * 0.707
+
+        fn sum(n: &[f64]) -> f64 {
+            let mut result = 0.0;
+            for elt in n {
+                result += elt;
+            }
+            result
+        }
+
+        assert_eq!(sum(&v), 2.4139999999999997); // works on arrays
+        assert_eq!(sum(&a), -0.4139999999999999); // works on vectors
+
+        assert_eq!(sum(sv), 2.4139999999999997);
+        assert_eq!(sum(sa), -0.4139999999999999);
+
+        assert_eq!(v.len(), 4);
+        assert_eq!(a.len(), 4);
+
+        assert_eq!(sv.len(), 4);
+        assert_eq!(sa.len(), 4);
+
+        assert_eq!(sum(&v[0..2]), 0.707);
+        assert_eq!(sum(&a[0..2]), -0.707);
+        assert_eq!(sum(&sv[0..2]), 0.707);
+        assert_eq!(sum(&sa[0..2]), -0.707);
+    }
 }
