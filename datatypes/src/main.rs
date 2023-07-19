@@ -6,6 +6,7 @@ fn main() {
     match &*args.function {
         "a" => a(),
         "b" => b(),
+        "c" => c(),
         s => eprintln!("Unknown function: {}", s),
     }
 }
@@ -17,7 +18,7 @@ struct Arguments {
 fn parse_args() -> Arguments {
     let args: Vec<String> = env::args().skip(1).collect();
 
-    if args.len() != 1 {
+    if args.len() < 1 {
         eprintln!(
             "Error wrong number of arguments: expected {}, got {}.",
             1,
@@ -88,6 +89,22 @@ fn b() {
     // $ target/release/datatypes b
     // thread 'main' panicked at 'multiplication overflowed', src/main.rs:56:31
     // note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+}
+
+fn c() {
+    // Get out command-line arguments as a vector of Strings.
+    let languages: Vec<String> = std::env::args().skip(2).collect();
+    for l in languages {
+        println!(
+            "{}: {}",
+            l,
+            if l.len() % 2 == 0 {
+                "functional"
+            } else {
+                "imperative"
+            }
+        );
+    }
 }
 
 #[cfg(test)]
@@ -252,5 +269,152 @@ mod tests {
         assert_eq!(tmp.1, "in thine eye");
 
         // fn swap<T>(x: &mut T, y: &mut T) -> () {}
+    }
+
+    #[test]
+    fn test_pointer() {
+        let tuple = ((0, 0), (1440, 900));
+        assert_eq!(tuple.0, (0, 0));
+
+        let t = (12, "eggs");
+        let b = Box::new(t); // allocate a tuple in the heap
+        assert_eq!(b.0, 12);
+        assert_eq!(b.1, "eggs");
+
+        // *mut T, *const T: raw pointer, unsafe
+
+        // Array, Vecotr, Slice
+        // let array: [usize; 2] = [0, 1];
+        let array = [0, 1];
+        assert_eq!(array.len(), 2);
+        assert_eq!(array[0], 0);
+        assert_eq!(array[1], 1);
+
+        let mut vector = Vec::new();
+        vector.push(0);
+        vector.push(1);
+        assert_eq!(array.len(), 2);
+        assert_eq!(array[0], 0);
+        assert_eq!(array[1], 1);
+
+        let slice = &[0, 1];
+        assert_eq!(slice.len(), 2);
+        assert_eq!(array[0], 0);
+        assert_eq!(array[1], 1);
+    }
+
+    #[test]
+    fn test_array() {
+        let lazy_caterer: [u32; 6] = [1, 2, 4, 7, 11, 16];
+        let taxonomy = ["Animalia", "Arthropoda", "Insecta"];
+        assert_eq!(lazy_caterer[3], 7);
+        assert_eq!(taxonomy.len(), 3);
+
+        let mut sieve = [true; 10000];
+        for i in 2..100 {
+            if sieve[i] {
+                let mut j = i * i;
+                while j < 10000 {
+                    sieve[j] = false;
+                    j += i;
+                }
+            }
+        }
+
+        assert!(sieve[211]);
+        assert!(!sieve[9876]);
+
+        let mut chaos = [3, 5, 4, 1, 2];
+        chaos.sort();
+        assert_eq!(chaos, [1, 2, 3, 4, 5]);
+
+        let mut primes = vec![2, 3, 5, 7];
+        assert_eq!(primes.iter().product::<i32>(), 210);
+        primes.push(11);
+        primes.push(13);
+        assert_eq!(primes.iter().product::<i32>(), 30030);
+
+        fn new_pixel_buffer(rows: usize, cols: usize) -> Vec<u8> {
+            vec![0; rows * cols]
+        }
+
+        let pixel_buffer = new_pixel_buffer(2, 2);
+        assert_eq!(pixel_buffer.len(), 4);
+        assert_eq!(pixel_buffer[0], 0);
+        assert_eq!(pixel_buffer[1], 0);
+        assert_eq!(pixel_buffer[2], 0);
+        assert_eq!(pixel_buffer[3], 0);
+
+        let mut pal = Vec::new();
+        pal.push("step");
+        pal.push("on");
+        pal.push("no");
+        pal.push("pets");
+        assert_eq!(pal, vec!["step", "on", "no", "pets"]);
+
+        let v: Vec<i32> = (0..5).collect();
+        assert_eq!(v, [0, 1, 2, 3, 4]);
+
+        // A palindrome!
+        let mut palindrone = vec!["a man", "a plan", "a canal", "panama"];
+        palindrone.reverse();
+        // Reasonable yet disappointing:
+        assert_eq!(palindrone, vec!["panama", "a canal", "a plan", "a man"]);
+
+        let reverse: Vec<_> = palindrone
+            .clone()
+            .into_iter()
+            .map(|s| s.chars().rev().collect::<String>())
+            .collect();
+        assert_eq!(reverse, vec!["amanap", "lanac a", "nalp a", "nam a"]);
+
+        let reverse: Vec<String> = palindrone
+            .clone()
+            .into_iter()
+            .map(|s| s.chars().rev().collect())
+            .collect();
+        assert_eq!(reverse, vec!["amanap", "lanac a", "nalp a", "nam a"]);
+    }
+
+    #[test]
+    fn test_vec_with_capacity() {
+        let mut v = Vec::with_capacity(2);
+        assert_eq!(v.len(), 0);
+        assert_eq!(v.capacity(), 2);
+
+        v.push(1);
+        v.push(2);
+        assert_eq!(v.len(), 2);
+        assert_eq!(v.capacity(), 2);
+
+        v.push(3);
+        assert_eq!(v.len(), 3);
+        assert_eq!(v.capacity(), 4);
+        // // Typically prints "capacity is now 4":
+        // println!("capacity is now {}", v.capacity());
+    }
+
+    #[test]
+    fn test_vec_insert_remove() {
+        let mut v = vec![10, 20, 30, 40, 50];
+
+        // Make the element at index 3 be 35.
+        v.insert(3, 35);
+        assert_eq!(v, [10, 20, 30, 35, 40, 50]);
+
+        // Remove the element at index 1.
+        v.remove(1);
+        assert_eq!(v, [10, 30, 35, 40, 50]);
+    }
+
+    #[test]
+    fn test_vec_pop() {
+        let mut v = vec!["Snow Puff", "Glass Gem"];
+        assert_eq!(v.len(), 2);
+        assert_eq!(v.pop(), Some("Glass Gem"));
+        assert_eq!(v.pop(), Some("Snow Puff"));
+        assert_eq!(v.len(), 0);
+        assert_eq!(v.pop(), None);
+        assert_eq!(v.len(), 0);
     }
 }
