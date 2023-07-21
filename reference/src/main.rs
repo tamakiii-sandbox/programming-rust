@@ -6,7 +6,7 @@ fn main() {
     table.insert(
         "Gesualdo".to_string(),
         vec![
-            "many_madrigals".to_string(),
+            "many madrigals".to_string(),
             "Tenebrae Responsoria".to_string(),
         ],
     );
@@ -25,8 +25,10 @@ fn main() {
         ],
     );
 
-    show(table);
+    show(&table);
+    assert_eq!(table["Gesualdo"][0], "many madrigals");
 
+    // show(table);
     // assert_eq!(table["Gesualdo"][0], "many madrigals");
     // error[E0382]: borrow of moved value: `table`
     //   --> src/main.rs:29:16
@@ -65,8 +67,11 @@ fn main() {
     //   The type of this reference is &mut T (pronounced "ref mute T"). Variable references are not of type Copy.
 }
 
-fn show(table: Table) {
+fn show(table: &Table) {
+    // table: &HashMap<String, Vec<String>>
     for (artist, works) in table {
+        // artist: &String
+        // works: &Vec<String>
         println!("works by {}:", artist);
         for work in works {
             println!("  {}", work);
