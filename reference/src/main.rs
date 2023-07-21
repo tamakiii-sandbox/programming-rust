@@ -52,6 +52,17 @@ fn main() {
     //    |               ++++++++
 
     // For more information about this error, try `rustc --explain E0382`.
+
+    // shared reference:
+    //   &e returns shared reference for value e.
+    //   if type of e was T, then type of &e is &T (ref T)
+    //   shared reference is Copy type
+
+    // mutable reference:
+    //   Using a mutable reference to a value, the value can be read or changed.
+    //   However, a mutable reference to the same value cannot be used simultaneously with any other reference (either a shared reference or a mutable reference).
+    //   &mut e returns a variable reference to the value e.
+    //   The type of this reference is &mut T (pronounced "ref mute T"). Variable references are not of type Copy.
 }
 
 fn show(table: Table) {
