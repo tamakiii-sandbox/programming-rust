@@ -7,6 +7,7 @@ fn main() {
         "a" => a(),
         "b" => b(),
         "c" => c(),
+        "d" => d(),
         s => eprintln!("Unknown function: {}", s),
     }
 }
@@ -107,8 +108,16 @@ fn c() {
     }
 }
 
+fn d() {
+    let ca0 = '\u{CA0}';
+    println!("{}_{}", ca0, ca0);
+    println!("{} != {}", "th\u{e9}", "th\u{301}");
+}
+
 #[cfg(test)]
 mod tests {
+    use regex::Regex;
+
     #[test]
     fn test_as() {
         assert_eq!(10_i8 as u16, 10_u16); // in-range
@@ -246,7 +255,7 @@ mod tests {
         assert_eq!('\u{2A}', '*');
 
         assert_eq!('*' as i32, 42);
-        assert_eq!('\u{CA0}' as u16, 0xca0);
+        assert_eq!('\u{CA0}' as u16, 0xca0); // ಠ
         assert_eq!('\u{CA0}' as i8, -0x60); // U+0CAO truncated to eight bits, signed
     }
 
@@ -472,5 +481,109 @@ mod tests {
         assert_eq!(sum(&a[0..2]), -0.707);
         assert_eq!(sum(&sv[0..2]), 0.707);
         assert_eq!(sum(&sa[0..2]), -0.707);
+    }
+
+    #[test]
+    fn test_string_types() {
+        // 3.7.1 string literal
+        let speech = "\"Ouch!\" said the well.\n";
+        assert_eq!(
+            speech,
+            "\"Ouch!\" \
+            said the well.\n"
+        );
+
+        // let default_win_install_path = r"C:\Program Files\Gorillas";
+        // let pattern = Regex::new(r"\d!+(\.\d+)*");
+
+        let hash_literal = r###"
+            This raw string started with 'r###'.
+            Therefore it does not end until we reach a quote mark ('"')
+            followed immediately by three pounds signs ('###'):
+        "###;
+
+        let hash_list: Vec<&str> = hash_literal.split("\n").collect();
+        assert_eq!(hash_list.len(), 5);
+        assert_eq!(hash_list[0], "");
+        assert_eq!(
+            hash_list[1],
+            "            This raw string started with 'r###'."
+        );
+
+        // 3.7.2 byte string
+        // Cannot caontin Unicode, just only ASCII and \xHH
+        let method = b"GET"; // &[u8; 3]
+        assert_eq!(method, b"GET");
+        assert_eq!(method, &[b'G', b'E', b'T']);
+
+        // 3.7.3 string on memry
+        let noodles = "noodles".to_string(); // String, Vec<u8> containing UTF-8
+        let oodles = &noodles[1..]; // &str, borrowing noodles[1..]
+        let poodles = "ಠ_ಠ"; // &str ("stir", "string slice")
+
+        assert_eq!(poodles.len(), 7);
+        assert_eq!(poodles.chars().count(), 3);
+        assert_eq!(noodles.len(), 7);
+        assert_eq!(noodles.bytes().count(), 7);
+        assert_eq!(oodles.len(), 6);
+        assert_eq!(oodles.bytes().count(), 6);
+
+        // 3.7.4 character String
+        //                      | Vec<T>              | String
+        // v[start..stop]       | Yes, &[T]           | Yes, &str
+        // auto type conversion | &Vec<T> to &[T]     | &String to &str
+        // method Inheritance   |
+
+        assert_eq!(format!("{}° {:02}’ {:02}” N", 24, 5, 23), "24° 05’ 23” N");
+
+        let bits = vec!["veni", "vidi", "vici"];
+        assert_eq!(bits.concat(), "venividivici");
+        assert_eq!(bits.join(","), "veni,vidi,vici");
+
+        // 3.7.5
+        assert!("ONE".to_lowercase() == "one");
+        assert!("peanut".contains("nut"));
+        assert_eq!("ಠ_ಠ".replace("ಠ", "■"), "■_■");
+        assert_eq!("    clean\n".trim(), "clean");
+
+        assert!("th\u{e9}" != "th\u{301}");
+    }
+
+    #[test]
+    fn test_type_alias() {
+        type Bytes = Vec<u8>;
+        fn decode(data: &Bytes) -> usize {
+            data.len()
+        }
+
+        let data = vec![1, 2, 3];
+        assert_eq!(decode(&data), 3);
+    }
+
+    #[test]
+    // fn test_regex() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_regex() -> Result<(), std::num::ParseIntError> {
+        let re = Regex::new(r"(?m)^([^:]+):([0-9]+):(.+)$").unwrap();
+        let hay = "\
+            path/to/foo:54:Blue Harvest\n\
+            path/to/bar:90:Something, Something, Dark Side\n\
+            path/to/baz:3:It's a Trap!\n\
+        ";
+
+        let mut results = vec![];
+        for (_, [path, lineno, line]) in re.captures_iter(hay).map(|c| c.extract()) {
+            results.push((path, lineno.parse::<u64>()?, line));
+        }
+
+        assert_eq!(
+            results,
+            vec![
+                ("path/to/foo", 54, "Blue Harvest"),
+                ("path/to/bar", 90, "Something, Something, Dark Side"),
+                ("path/to/baz", 3, "It's a Trap!"),
+            ]
+        );
+
+        Ok(())
     }
 }
