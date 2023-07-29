@@ -7,6 +7,7 @@ fn main() {
 #[cfg(test)]
 #[allow(unused_imports)]
 mod test {
+    use std::fmt::Error;
     use std::iter::IntoIterator;
     use std::net::{AddrParseError, IpAddr};
     use std::ops::{Deref, DerefMut};
@@ -156,6 +157,47 @@ mod test {
                 client_address: "192.0.2.0".to_string(),
             };
             assert_eq!(main(post).ok(), Some("192.0.2.0".to_string()));
+        }
+
+        // 6.4
+        {
+            // let name: type = expr;
+            {
+                struct User {
+                    nickname: Option<String>,
+                }
+                impl User {
+                    fn has_nickname(&self) -> bool {
+                        self.nickname.is_some()
+                    }
+                    fn nickname(&self) -> String {
+                        self.nickname.clone().unwrap()
+                    }
+                    fn register(&mut self, nickname: &str) {
+                        self.nickname = Some(nickname.to_string());
+                    }
+                }
+                fn generate_unique_name() -> String {
+                    "Unique Name".to_string()
+                }
+                fn main(mut user: User) -> String {
+                    let name;
+                    if user.has_nickname() {
+                        name = user.nickname();
+                    } else {
+                        name = generate_unique_name();
+                        user.register(&name);
+                    }
+                    name
+                }
+                let name = main(User { nickname: None });
+                assert_eq!(name, "Unique Name".to_string());
+
+                let name = main(User {
+                    nickname: Some("John".to_string()),
+                });
+                assert_eq!(name, "John".to_string());
+            }
         }
     }
 }
