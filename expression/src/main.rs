@@ -190,13 +190,31 @@ mod test {
                     }
                     name
                 }
-                let name = main(User { nickname: None });
-                assert_eq!(name, "Unique Name".to_string());
+                fn main2(mut user: User) -> String {
+                    let name = if user.has_nickname() {
+                        user.nickname()
+                    } else {
+                        let name = generate_unique_name();
+                        user.register(&name);
+                        name
+                    };
+                    name
+                }
+                let user = User { nickname: None };
+                assert_eq!(main(user), "Unique Name".to_string());
 
-                let name = main(User {
+                let user = User {
                     nickname: Some("John".to_string()),
-                });
-                assert_eq!(name, "John".to_string());
+                };
+                assert_eq!(main(user), "John".to_string());
+
+                let user = User { nickname: None };
+                assert_eq!(main2(user), "Unique Name".to_string());
+
+                let user = User {
+                    nickname: Some("John".to_string()),
+                };
+                assert_eq!(main2(user), "John".to_string());
             }
         }
     }
