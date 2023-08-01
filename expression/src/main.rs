@@ -216,6 +216,272 @@ mod test {
                 };
                 assert_eq!(main2(user), "John".to_string());
             }
+
+            // {
+            //     use std::cmp::Ordering;
+            //     use std::io;
+            //     use std::path::Path;
+
+            //     fn show_files() -> io::Result<()> {
+            //         let mut v = vec![];
+            //         v.push(Path::new("/dev/null"));
+            //         v.push(Path::new("/dev/stdout"));
+            //         v.push(Path::new("/dev/stderr"));
+
+            //         fn cmp_by_timestamp_then_name(a: &FileInfo, b: &FileInfo) -> Ordering {
+            //             a.timestamp
+            //                 .cmp(&b.timestamp)
+            //                 .reverse()
+            //                 .then(a.path.cmp(&b.path))
+            //         }
+            //         v.sort_by(cmp_by_timestamp_then_name);
+            //         Ok(())
+            //     }
+            // }
+        }
+
+        // 6.6
+        {
+            // if let pattern = expr {
+            //     block1
+            // } else {
+            //     block2
+            // }
+            {
+                struct Cookie;
+                struct Request {
+                    session_cookie: Option<Cookie>,
+                }
+                fn restore_session(_cookie: Cookie) {}
+                fn main(request: Request) -> Result<(), ()> {
+                    if let Some(cookie) = request.session_cookie {
+                        Ok(restore_session(cookie))
+                    } else {
+                        Err(())
+                    }
+                }
+                fn main2(request: Request) -> Result<(), ()> {
+                    match request.session_cookie {
+                        Some(cookie) => Ok(restore_session(cookie)),
+                        _ => Err(()),
+                    }
+                }
+                let request = Request {
+                    session_cookie: Some(Cookie {}),
+                };
+                assert!(main(request).is_ok());
+
+                let request = Request {
+                    session_cookie: None,
+                };
+                assert!(main(request).is_err());
+
+                let request = Request {
+                    session_cookie: Some(Cookie {}),
+                };
+                assert!(main2(request).is_ok());
+
+                let request = Request {
+                    session_cookie: None,
+                };
+                assert!(main2(request).is_err());
+            }
+
+            // if let Err(err) = show_cheesy_anti_robot_task() {
+            //     log_robot_attempt(err);
+            //     politely_accuse_user_of_being_a_robot();
+            // } else {
+            //     session.mark_as_human();
+            // }
+        }
+
+        // 6.7
+        {
+            // while condition {
+            //     block
+            // }
+
+            // while let pattern = expr {
+            //     block
+            // }
+
+            // loop {
+            //     block
+            // }
+
+            // for pattern in iterable {
+            //     block
+            // }
+            for i in 0..20 {
+                println!("{}", i);
+            }
+
+            fn error_messages() -> Vec<String> {
+                vec!["Something wrong with tech".to_string()]
+            }
+            {
+                let strings: Vec<String> = error_messages();
+                for s in strings {
+                    println!("{}", s);
+                }
+                // assert_eq!(strings.len(), 1); // error
+                // println!("{} errors(s)", strings.len()); // error: use of moved value
+                // note: `into_iter` takes ownership of the receiver `self`, which moves `strings`
+                //    --> /Users/tamakiii/.rustup/toolchains/stable-x86_64-apple-darwin/lib/rustlib/src/rust/library/core/src/iter/traits/collect.rs:262:18
+                //     |
+                // 262 |     fn into_iter(self) -> Self::IntoIter;
+                //     |                  ^^^^
+                // help: consider iterating over a slice of the `Vec<String>`'s content to avoid moving into the `for` loop
+                //     |
+                // 323 |             for s in &strings {
+                //     |                      +
+
+                // For more information about this error, try `rustc --explain E0382`.
+                // error: could not compile `expression` due to previous error
+            }
+            {
+                let strings: Vec<String> = error_messages();
+                for rs in &strings {
+                    println!("String {:?} is at address {:p}.", *rs, rs);
+                }
+                // println!("{} errors(s)", strings.len());
+                assert_eq!(strings.len(), 1);
+            }
+            {
+                let mut strings: Vec<String> = error_messages();
+                for rs in &mut strings {
+                    // the type of rs is &mut String
+                    rs.push('\n'); // add a newline to each string
+                }
+                assert_eq!(strings[0], "Something wrong with tech\n");
+            }
+        }
+
+        // 6.8
+        {
+            // let answer = loop {
+            //     if let Some(line) = next_line() {
+            //         if line.starts_with("answer: ") {
+            //             break line;
+            //         }
+            //     } else {
+            //         break "answer: nothing";
+            //     }
+            // }
+
+            // for line in input_lines {
+            //     let trimmed = trim_comments_and_whitespace(line);
+            //     if trimmed.is_empty() {
+            //         // Jump back to the top of the loop and
+            //         // move on to the next line of input.
+            //         continue;
+            //     }
+            // }
+
+            #[derive(Debug)]
+            struct Room {
+                spot: Vec<String>,
+            }
+            impl Room {
+                fn hiding_spots(&self) -> &Vec<String> {
+                    &self.spot
+                }
+            }
+
+            let key = "spot";
+            let apartment = vec![Room {
+                spot: vec!["spot".to_string()],
+            }];
+            'search: for room in apartment {
+                for spot in room.hiding_spots() {
+                    if spot.contains(key) {
+                        println!("Your keys are {} in the {:?}.", spot, room);
+                        break 'search;
+                    }
+                }
+            }
+        }
+
+        // 6.10
+        {
+            // "definite assignment"
+
+            // fn wait_for_process(process: &mut Process) -> i32 {
+            //     while true {
+            //         if process.wait() {
+            //             return process.exit_code();
+            //         }
+            //     }
+            // } // error: mismatched types: expected i32, found()
+
+            // std::process::exit()
+            // pub fn exit(code: i32) -> !
+
+            // fn serve_forever(socket: ServerSocket, handler: ServerHandler) -> ! {
+            //     socket.listen();
+            //     loop {
+            //         let s = socket.accept();
+            //         handler.handle(s);
+            //     }
+            // }
+        }
+
+        // 6.11
+        #[allow(unused_must_use)]
+        {
+            // Vec<i32>::with_capacity(1000);
+            // error: comparison operators cannot be chained
+            //    --> src/main.rs:431:16
+            //     |
+            // 431 |             Vec<i32>::with_capacity(1000);
+            //     |                ^   ^
+            //     |
+            // help: use `::<...>` instead of `<...>` to specify lifetime, type, or const arguments
+            //     |
+            // 431 |             Vec::<i32>::with_capacity(1000);
+            //     |                ++
+
+            Vec::<i32>::with_capacity(1000);
+        }
+
+        // 6.14
+        {
+            let a: i32 = 0;
+            let b = a.wrapping_add(1);
+            assert_eq!(a, 0);
+            assert_eq!(b, 1);
+
+            assert_eq!(a.checked_div(1), Some(0));
+            assert_eq!(a.checked_div(0), None);
+
+            let hi: u8 = 0xe0;
+            let lo = !hi;
+            assert_eq!(lo, 0x1f);
+        }
+
+        // 6.16
+        {
+            assert_eq!(-1.99 as i32, -1);
+            assert_eq!(1e6 as u8, 255);
+
+            assert_eq!(std::char::from_u32(0x0030), Some('0'));
+            assert_eq!(std::char::from_u32(0xd800), None);
+
+            // "deref coercions"
+            // * Values of type `&String` are automatically converted to type `&str` without casting.
+            // * Values of type `&Vec<i32>` are automatically converted to `&[i32]`.
+            // * Values of type `Box<Chessboard>` are automatically converted to `&Chessboard`.
+        }
+
+        // 6.17
+        {
+            let is_even = |x| x % 2 == 0;
+            assert!(is_even(10));
+            assert!(!is_even(11));
+
+            let is_even = |x: u64| -> bool { x % 2 == 0 };
+            assert!(is_even(10));
+            assert!(!is_even(11));
         }
     }
 }
